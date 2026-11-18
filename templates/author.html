@@ -1,0 +1,167 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>作者投稿管理</title>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>我的投稿清單</h1>
+
+    <a href="/add-manuscript-page">
+        <button>新增投稿</button>
+    </a>
+
+    <table>
+        <thead>
+            <tr>
+                <th>投稿類別</th>
+                <th>文章標題</th>
+                <th>審查狀態</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+
+        <tbody id="manuscript-list">
+            <tr>
+                <td colspan="4">資料載入中...</td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+
+<script>
+
+    // 作者 ID，目前先使用測試帳號 1
+    const authorId = 1;
+
+
+    // 取得投稿資料
+    function loadManuscripts() {
+
+        fetch(`/author/${authorId}/manuscripts`)
+            .then(response => response.json())
+            .then(data => {
+
+                const list = document.getElementById("manuscript-list");
+
+                list.innerHTML = "";
+
+                if (data.length === 0) {
+                    list.innerHTML = `
+                        <tr>
+                            <td colspan="4">目前沒有投稿資料</td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                data.forEach(manuscript => {
+
+                    const row = document.createElement("tr");
+
+                    row.innerHTML = `
+                        <td>${manuscript.category}</td>
+                        <td>${manuscript.title}</td>
+                        <td class="status">${manuscript.status}</td>
+                        <td>
+                            ${
+                                manuscript.status === "編輯中"
+                                ? `
+                                    <button onclick="editManuscript(${manuscript.id})">修改</button>
+                                    <button onclick="deleteManuscript(${manuscript.id})">刪除</button>
+                                    <button onclick="submitManuscript(${manuscript.id})">送出投稿</button>
+                                `
+                                : ""
+                            }
+                        </td>
+                    `;
+
+                    list.appendChild(row);
+
+                });
+
+            })
+            .catch(error => {
+                console.error("取得投稿資料失敗：", error);
+            });
+
+    }
+
+
+    // 修改投稿
+    function editManuscript(id) {
+
+        window.location.href = `/edit-manuscript-page?id=${id}`;
+
+    }
+
+
+    // 刪除投稿
+    function deleteManuscript(id) {
+
+        if (!confirm("確定要刪除這篇稿件嗎？")) {
+            return;
+        }
+
+        fetch(`/author/${authorId}/manuscripts/${id}`, {
+            method: "DELETE"
+        })
+        .then(response => response.json())
+        .then(data => {
+
+            alert(data.message);
+
+            loadManuscripts();
+
+        })
+        .catch(error => {
+
+            alert("刪除失敗");
+            console.error(error);
+
+        });
+
+    }
+
+
+    // 送出投稿
+    function submitManuscript(id) {
+
+        if (!confirm("確定要送出這篇投稿嗎？")) {
+            return;
+        }
+
+        fetch(`/author/${authorId}/manuscripts/${id}/submit`, {
+            method: "PUT"
+        })
+        .then(response => response.json())
+        .then(data => {
+
+            alert(data.message);
+
+            loadManuscripts();
+
+        })
+        .catch(error => {
+
+            alert("送出投稿失敗");
+            console.error(error);
+
+        });
+
+    }
+
+
+    // 網頁載入時執行
+    loadManuscripts();
+
+</script>
+
+</body>
+</html>

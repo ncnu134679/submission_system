@@ -1,0 +1,171 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>修改投稿</title>
+
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 40px;
+            color: #333;
+        }
+
+        .container {
+            width: 650px;
+            margin: auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #355c4b;
+        }
+
+        label {
+            display: block;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+
+        textarea {
+            height: 200px;
+            resize: vertical;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #557c68;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #3d604e;
+        }
+
+        a {
+            color: #557c68;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>修改投稿</h1>
+
+    <form id="manuscript-form">
+
+        <label>投稿類別</label>
+        <input type="text" id="category" required>
+
+        <label>文章標題</label>
+        <input type="text" id="title" required>
+
+        <label>文章內容</label>
+        <textarea id="content" required></textarea>
+
+        <button type="submit">儲存修改</button>
+
+    </form>
+
+    <a href="/author-page">返回投稿清單</a>
+
+</div>
+
+<script>
+    const authorId = 1;
+
+    // 從網址取得稿件 ID
+    const params = new URLSearchParams(window.location.search);
+    const manuscriptId = params.get("id");
+
+    // 載入原本的投稿資料
+    function loadManuscript() {
+
+        fetch(`/author/${authorId}/manuscripts/${manuscriptId}`)
+        .then(response => response.json())
+        .then(data => {
+
+            if (!data.id) {
+                alert(data.message || "找不到稿件");
+                window.location.href = "/author-page";
+                return;
+            }
+
+            document.getElementById("category").value = data.category;
+            document.getElementById("title").value = data.title;
+            document.getElementById("content").value = data.content;
+
+        })
+        .catch(error => {
+            alert("載入稿件失敗");
+            console.error(error);
+        });
+    }
+
+    // 儲存修改
+    document.getElementById("manuscript-form")
+        .addEventListener("submit", function(event) {
+
+        event.preventDefault();
+
+        const formData = new FormData();
+
+        formData.append("category",
+            document.getElementById("category").value);
+
+        formData.append("title",
+            document.getElementById("title").value);
+
+        formData.append("content",
+            document.getElementById("content").value);
+
+        fetch(`/author/${authorId}/manuscripts/${manuscriptId}`, {
+            method: "PUT",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+
+            if (data.id) {
+                alert("投稿修改成功！");
+                window.location.href = "/author-page";
+            } else {
+                alert(data.message);
+            }
+
+        })
+        .catch(error => {
+            alert("修改失敗，請稍後再試");
+            console.error(error);
+        });
+
+    });
+
+    loadManuscript();
+</script>
+
+</body>
+</html>

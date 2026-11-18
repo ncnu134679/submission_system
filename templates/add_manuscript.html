@@ -1,0 +1,147 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>新增投稿</title>
+<!--
+    <style>
+        body {
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #f3f4f6;
+            margin: 0;
+            padding: 40px;
+            color: #333;
+        }
+
+        .container {
+            width: 650px;
+            margin: auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #355c4b;
+        }
+
+        label {
+            display: block;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 15px;
+        }
+
+        textarea {
+            height: 200px;
+            resize: vertical;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #557c68;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #3d604e;
+        }
+
+        a {
+            color: #557c68;
+            text-decoration: none;
+        }
+
+        #message {
+            margin-top: 15px;
+        }
+    </style>
+    -->
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>新增投稿</h1>
+
+    <form id="manuscript-form">
+
+        <label>投稿類別</label>
+        <input type="text" id="category" required>
+
+        <label>文章標題</label>
+        <input type="text" id="title" required>
+
+        <label>文章內容</label>
+        <textarea id="content" required></textarea>
+
+        <button type="submit">送出新增</button>
+
+    </form>
+
+    <p id="message"></p>
+
+    <a href="/author-page">返回投稿清單</a>
+
+</div>
+
+
+<script>
+    const authorId = 1;
+
+    document.getElementById("manuscript-form")
+        .addEventListener("submit", function(event) {
+
+        event.preventDefault();
+
+        const formData = new FormData();
+
+        formData.append("category",
+            document.getElementById("category").value);
+
+        formData.append("title",
+            document.getElementById("title").value);
+
+        formData.append("content",
+            document.getElementById("content").value);
+
+        fetch(`/author/${authorId}/manuscripts`, {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+
+            console.log("新增回傳資料：", data);
+
+            if (data.id) {
+                alert("投稿新增成功！");
+                window.location.assign("/author-page");
+            } else {
+                alert("新增失敗：" + data.message);
+            }
+
+        })
+        .catch(error => {
+            alert("發生錯誤，請檢查 FastAPI");
+            console.error(error);
+        });
+
+    });
+</script>
