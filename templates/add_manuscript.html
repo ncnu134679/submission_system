@@ -6,16 +6,41 @@
     <title>新增投稿</title>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            margin: 30px;
+            margin: 0;
+            padding: 40px;
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #F4F6F7;
+            color: #293B46;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 35px;
+            background-color: white;
+            border: 1px solid #E1E6E9;
+            border-radius: 8px;
         }
 
         .back-link {
             display: inline-block;
             margin-bottom: 20px;
+            color: #405D68;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
         }
 
         h1 {
+            font-size: 28px;
+            margin-top: 0;
             margin-bottom: 25px;
         }
 
@@ -23,26 +48,68 @@
             display: block;
             margin-top: 20px;
             margin-bottom: 8px;
+            font-weight: bold;
         }
 
         input, textarea {
-            width: 500px;
-            padding: 8px;
-            box-sizing: border-box;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #D5DEE2;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 15px;
+            color: #293B46;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #405D68;
         }
 
         textarea {
-            height: 200px;
+            height: 220px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 25px;
         }
 
         button {
-            display: block;
-            margin-top: 20px;
-            padding: 6px 15px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background-color: #405D68;
+            color: white;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
         }
 
-        #message {
-            margin-top: 15px;
+        button:hover {
+            background-color: #304A54;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            .button-group button {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -66,21 +133,29 @@
             <label>文章內容</label>
             <textarea id="content" required></textarea>
 
-            <button type="submit">送出新增</button>
+            <div class="button-group">
+                <button type="submit" id="submit-button">
+                    送出新增
+                </button>
+            </div>
 
         </form>
-
-        <p id="message"></p>
 
     </div>
 
     <script>
+
         const authorId = 1;
 
+        // 新增投稿
         document.getElementById("manuscript-form")
-            .addEventListener("submit", function(event) {
+            .addEventListener("submit", async function(event) {
 
             event.preventDefault();
+
+            const submitButton = document.getElementById("submit-button");
+
+            submitButton.disabled = true;
 
             const formData = new FormData();
 
@@ -93,29 +168,49 @@
             formData.append("content",
                 document.getElementById("content").value);
 
-            fetch(`/author/${authorId}/manuscripts`, {
-                method: "POST",
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
+            try {
+
+                const response = await fetch(
+                    `/author/${authorId}/manuscripts`,
+                    {
+                        method: "POST",
+                        body: formData
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error("新增投稿失敗");
+                }
+
+                const data = await response.json();
 
                 console.log("新增回傳資料：", data);
 
                 if (data.id) {
+
                     alert("投稿新增成功！");
-                    window.location.assign("/author-page");
+
+                    window.location.href = "/author-page";
+
                 } else {
-                    alert("新增失敗：" + data.message);
+
+                    alert("新增失敗：" + (data.message || "請稍後再試"));
+
                 }
 
-            })
-            .catch(error => {
+            } catch (error) {
+
                 alert("發生錯誤，請檢查 FastAPI");
                 console.error(error);
-            });
+
+            } finally {
+
+                submitButton.disabled = false;
+
+            }
 
         });
+
     </script>
 
 </body>
