@@ -6,78 +6,190 @@
     <title>作者投稿管理</title>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            margin: 30px;
+            margin: 0;
+            padding: 40px;
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #F4F6F7;
+            color: #293B46;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 35px;
+            background-color: white;
+            border: 1px solid #E1E6E9;
+            border-radius: 8px;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #405D68;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
         }
 
         h1 {
-            margin-bottom: 20px;
+            font-size: 28px;
+            margin-top: 0;
+            margin-bottom: 25px;
         }
 
         .add-button {
+            display: inline-block;
             margin-bottom: 20px;
+            padding: 10px 18px;
+            background-color: #405D68;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .add-button:hover {
+            background-color: #304A54;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
         }
 
         th, td {
-            border: 1px solid #ccc;
-            padding: 12px;
+            padding: 14px 12px;
+            border-bottom: 1px solid #E1E6E9;
             text-align: left;
         }
 
-        button {
-            margin: 3px;
+        th {
+            background-color: #EDF1F3;
+            font-weight: bold;
+        }
+
+        tr:hover {
+            background-color: #F8FAFB;
+        }
+
+        .status {
+            display: inline-block;
             padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .editing {
+            background-color: #EDF1F3;
+            color: #405D68;
+        }
+
+        .reviewing {
+            background-color: #FFF3DF;
+            color: #9A6825;
+        }
+
+        .approved {
+            background-color: #E5F2E9;
+            color: #39734A;
+        }
+
+        .action-button {
+            padding: 7px 13px;
+            border: 1px solid #405D68;
+            border-radius: 4px;
+            background-color: white;
+            color: #405D68;
+            font-family: inherit;
+            font-size: 13px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        .action-button:hover {
+            background-color: #EDF1F3;
+        }
+
+        .delete-button {
+            border-color: #A65A5A;
+            color: #A65A5A;
+        }
+
+        .delete-button:hover {
+            background-color: #FAEEEE;
+        }
+
+        .empty-message {
+            padding: 30px;
+            text-align: center;
+            color: #78858B;
+        }
+
+        @media (max-width: 700px) {
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                padding: 20px;
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 650px;
+            }
         }
     </style>
 </head>
 
 <body>
 
-<div class="container">
+    <div class="container">
 
-    <h1>我的投稿清單</h1>
+        <a class="back-link" href="/">← 返回首頁</a>
 
-    <div class="add-button">
-        <a href="/add-manuscript-page">
-            <button>新增投稿</button>
+        <h1>作者投稿管理</h1>
+
+        <a class="add-button" href="/add-manuscript-page">
+            + 新增投稿
         </a>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>投稿類別</th>
+                    <th>文章標題</th>
+                    <th>審查狀態</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+
+            <tbody id="manuscript-list">
+                <tr>
+                    <td colspan="4" class="empty-message">
+                        載入中...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>投稿類別</th>
-                <th>文章標題</th>
-                <th>審查狀態</th>
-                <th>操作</th>
-            </tr>
-        </thead>
+    <script>
 
-        <tbody id="manuscript-list">
-            <tr>
-                <td colspan="4">資料載入中...</td>
-            </tr>
-        </tbody>
-    </table>
+        const authorId = 1;
 
-</div>
+        // 載入作者投稿清單
+        function loadManuscripts() {
 
-<script>
-
-    // 作者 ID，目前先使用測試帳號 1
-    const authorId = 1;
-
-
-    // 取得投稿資料
-    function loadManuscripts() {
-
-        fetch(`/author/${authorId}/manuscripts`)
+            fetch(`/author/${authorId}/manuscripts`)
             .then(response => response.json())
             .then(data => {
 
@@ -88,7 +200,9 @@
                 if (data.length === 0) {
                     list.innerHTML = `
                         <tr>
-                            <td colspan="4">目前沒有投稿資料</td>
+                            <td colspan="4" class="empty-message">
+                                目前尚無投稿資料
+                            </td>
                         </tr>
                     `;
                     return;
@@ -96,24 +210,54 @@
 
                 data.forEach(manuscript => {
 
+                    let statusClass = "";
+
+                    if (manuscript.status === "編輯中") {
+                        statusClass = "editing";
+                    } else if (manuscript.status === "審查中") {
+                        statusClass = "reviewing";
+                    } else if (manuscript.status === "已通過") {
+                        statusClass = "approved";
+                    }
+
+                    let actionHtml = "";
+
+                    if (manuscript.status === "編輯中") {
+                        actionHtml = `
+                            <button class="action-button"
+                                onclick="editManuscript(${manuscript.id})">
+                                編輯
+                            </button>
+
+                            <button class="action-button delete-button"
+                                onclick="deleteManuscript(${manuscript.id})">
+                                刪除
+                            </button>
+                        `;
+                    } else {
+                        actionHtml = "-";
+                    }
+
                     const row = document.createElement("tr");
 
                     row.innerHTML = `
-                        <td>${manuscript.category}</td>
-                        <td>${manuscript.title}</td>
-                        <td>${manuscript.status}</td>
-                        <td>
-                            ${
-                                manuscript.status === "編輯中"
-                                ? `
-                                    <button onclick="editManuscript(${manuscript.id})">修改</button>
-                                    <button onclick="deleteManuscript(${manuscript.id})">刪除</button>
-                                    <button onclick="submitManuscript(${manuscript.id})">送出投稿</button>
-                                `
-                                : ""
-                            }
-                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td>${actionHtml}</td>
                     `;
+
+                    // 顯示投稿類別
+                    row.cells[0].textContent = manuscript.category;
+
+                    // 顯示文章標題
+                    row.cells[1].textContent = manuscript.title;
+
+                    // 顯示審查狀態
+                    const status = document.createElement("span");
+                    status.className = `status ${statusClass}`;
+                    status.textContent = manuscript.status;
+                    row.cells[2].appendChild(status);
 
                     list.appendChild(row);
 
@@ -121,80 +265,59 @@
 
             })
             .catch(error => {
-                console.error("取得投稿資料失敗：", error);
+                console.error("載入投稿清單失敗：", error);
+
+                document.getElementById("manuscript-list").innerHTML = `
+                    <tr>
+                        <td colspan="4" class="empty-message">
+                            載入投稿資料失敗
+                        </td>
+                    </tr>
+                `;
             });
 
-    }
-
-
-    // 修改投稿
-    function editManuscript(id) {
-
-        window.location.href = `/edit-manuscript-page?id=${id}`;
-
-    }
-
-
-    // 刪除投稿
-    function deleteManuscript(id) {
-
-        if (!confirm("確定要刪除這篇稿件嗎？")) {
-            return;
         }
 
-        fetch(`/author/${authorId}/manuscripts/${id}`, {
-            method: "DELETE"
-        })
-        .then(response => response.json())
-        .then(data => {
 
-            alert(data.message);
-
-            loadManuscripts();
-
-        })
-        .catch(error => {
-
-            alert("刪除失敗");
-            console.error(error);
-
-        });
-
-    }
-
-
-    // 送出投稿
-    function submitManuscript(id) {
-
-        if (!confirm("確定要送出這篇投稿嗎？")) {
-            return;
+        // 編輯投稿
+        function editManuscript(id) {
+            window.location.href = `/edit-manuscript-page?id=${id}`;
         }
 
-        fetch(`/author/${authorId}/manuscripts/${id}/submit`, {
-            method: "PUT"
-        })
-        .then(response => response.json())
-        .then(data => {
 
-            alert(data.message);
+        // 刪除投稿
+        function deleteManuscript(id) {
 
-            loadManuscripts();
+            if (!confirm("確定要刪除這篇投稿嗎？")) {
+                return;
+            }
 
-        })
-        .catch(error => {
+            fetch(`/author/${authorId}/manuscripts/${id}`, {
+                method: "DELETE"
+            })
+            .then(response => response.json())
+            .then(data => {
 
-            alert("送出投稿失敗");
-            console.error(error);
+                if (data.id) {
+                    alert("投稿刪除成功！");
+                    loadManuscripts();
+                } else {
+                    alert(data.message || "刪除失敗");
+                }
 
-        });
+            })
+            .catch(error => {
+                alert("刪除失敗，請稍後再試");
+                console.error(error);
+            });
 
-    }
+        }
 
 
-    // 網頁載入時執行
-    loadManuscripts();
+        // 網頁載入時執行
+        loadManuscripts();
 
-</script>
+    </script>
 
 </body>
 </html>

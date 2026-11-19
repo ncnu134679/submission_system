@@ -3,185 +3,304 @@
 <html lang="zh-Hant-TW">
 <head>
     <meta charset="UTF-8">
-    <title>查看投稿內容</title>
+    <title>投稿內容審查</title>
 
     <style>
         body {
-            margin: 30px;
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #F4F6F7;
+            color: #293B46;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 35px;
+            border-radius: 8px;
         }
 
         .back-link {
             display: inline-block;
             margin-bottom: 20px;
+            color: #405D68;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
         }
 
         h1 {
+            font-size: 28px;
             margin-bottom: 25px;
         }
 
-        p {
-            margin-top: 15px;
-            margin-bottom: 15px;
+        .info {
+            background-color: #F4F6F7;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 25px;
         }
 
-        h3 {
-            margin-top: 30px;
-            margin-bottom: 10px;
+        .info p {
+            margin: 10px 0;
+        }
+
+        .info strong {
+            display: inline-block;
+            width: 90px;
+        }
+
+        .content-section h2,
+        .feedback-section h2 {
+            font-size: 20px;
+            margin-bottom: 12px;
         }
 
         #content {
-            width: 700px;
-            min-height: 200px;
-            padding: 10px;
-            border: 1px solid #ccc;
+            line-height: 1.8;
             white-space: pre-wrap;
             overflow-wrap: break-word;
         }
 
-        .action-button {
-            margin-top: 25px;
-            margin-right: 10px;
-            padding: 6px 15px;
+        .section-divider {
+            border: none;
+            border-top: 1px solid #E1E6E9;
+            margin: 30px 0;
+        }
+
+        .feedback-section textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            font-size: 15px;
+            font-family: "Microsoft JhengHei", sans-serif;
+            border: 1px solid #D5DDE1;
+            border-radius: 5px;
+            resize: vertical;
+        }
+
+        .feedback-section textarea:focus {
+            outline: none;
+            border-color: #405D68;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 5px;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .return-button {
+            background-color: white;
+            color: #405D68;
+            border: 1px solid #405D68;
+        }
+
+        .return-button:hover {
+            background-color: #F4F6F7;
+        }
+
+        .approve-button {
+            background-color: #405D68;
+            color: white;
+        }
+
+        .approve-button:hover {
+            background-color: #293B46;
         }
     </style>
 </head>
 
 <body>
 
-    <div class="container">
+<div class="container">
 
-        <a class="back-link" href="/editor-page">
-            ← 返回投稿清單
-        </a>
+    <a href="/editor-page" class="back-link">← 返回投稿清單</a>
 
-        <h1>投稿內容審查</h1>
+    <h1>投稿內容審查</h1>
 
-        <p>作者：<span id="author"></span></p>
+    <div class="info">
+        <p>
+            <strong>作者：</strong>
+            <span id="author"></span>
+        </p>
 
-        <p>投稿類別：<span id="category"></span></p>
+        <p>
+            <strong>投稿類別：</strong>
+            <span id="category"></span>
+        </p>
 
-        <p>文章標題：<span id="title"></span></p>
+        <p>
+            <strong>文章標題：</strong>
+            <span id="title"></span>
+        </p>
+    </div>
 
-        <h3>文章內容</h3>
+    <div class="content-section">
+        <h2>文章內容</h2>
+        <p id="content"></p>
+    </div>
 
-        <div id="content"></div>
+    <hr class="section-divider">
 
-        <br>
+    <div class="feedback-section">
+        <h2>編輯建議</h2>
+        <textarea
+            id="editor_feedback"
+            placeholder="請填寫不通過原因或建議作者修改的內容..."
+            rows="5"
+        ></textarea>
+    </div>
 
-        <button class="action-button" onclick="approveManuscript()">
-            通過
+    <div class="button-group">
+
+        <button
+            class="return-button"
+            onclick="returnManuscript()">
+            不通過
         </button>
 
-        <button class="action-button" onclick="returnManuscript()">
-            退回
+        <button
+            class="approve-button"
+            onclick="approveManuscript()">
+            通過
         </button>
 
     </div>
 
-    <script>
+</div>
 
-        // 取得網址中的稿件 ID
-        const params = new URLSearchParams(window.location.search);
+<script>
+    const manuscriptId =
+        new URLSearchParams(window.location.search).get("id");
 
-        const manuscriptId = params.get("id");
 
+    // 載入投稿內容
+    function loadManuscript() {
 
-        // 載入稿件內容
-        function loadManuscript() {
+        if (!manuscriptId) {
+            alert("沒有指定稿件 ID");
+            window.location.href = "/editor-page";
+            return;
+        }
 
-            if (!manuscriptId) {
-                alert("沒有指定稿件 ID");
+        fetch(`/editor/manuscripts/${manuscriptId}`)
+        .then(response => response.json())
+        .then(data => {
+
+            if (!data.id) {
+                alert(data.message || "找不到稿件");
                 window.location.href = "/editor-page";
                 return;
             }
 
-            fetch(`/editor/manuscripts/${manuscriptId}`)
-                .then(response => response.json())
-                .then(data => {
+            document.getElementById("author").textContent =
+                data.author;
 
-                    if (!data.id) {
-                        alert(data.message);
-                        window.location.href = "/editor-page";
-                        return;
-                    }
+            document.getElementById("category").textContent =
+                data.category;
 
-                    document.getElementById("author").textContent = data.author;
+            document.getElementById("title").textContent =
+                data.title;
 
-                    document.getElementById("category").textContent = data.category;
+            document.getElementById("content").textContent =
+                data.content;
 
-                    document.getElementById("title").textContent = data.title;
+        })
+        .catch(error => {
+            console.error("載入投稿失敗：", error);
+            alert("載入投稿內容時發生錯誤");
+        });
+    }
 
-                    document.getElementById("content").textContent = data.content;
 
-                })
-                .catch(error => {
-                    alert("取得稿件內容失敗");
-                    console.error(error);
-                });
+    // 通過投稿
+    function approveManuscript() {
 
+        if (!confirm("確定要通過這篇投稿嗎？")) {
+            return;
         }
 
+        fetch(`/editor/manuscripts/${manuscriptId}/approve`, {
+            method: "PUT"
+        })
+        .then(response => response.json())
+        .then(data => {
 
-        // 通過投稿
-        function approveManuscript() {
-
-            if (!confirm("確定通過這篇投稿嗎？")) {
-                return;
+            if (data.status === "已通過") {
+                alert("稿件已通過！");
+                window.location.href = "/editor-page";
+            } else {
+                alert(data.message || "操作失敗");
             }
 
-            fetch(`/editor/manuscripts/${manuscriptId}/approve`, {
-                method: "PUT"
-            })
-            .then(response => response.json())
-            .then(data => {
+        })
+        .catch(error => {
+            console.error("通過投稿失敗：", error);
+            alert("審查時發生錯誤");
+        });
+    }
 
-                alert(data.message);
 
-                if (data.status === "已通過") {
-                    window.location.href = "/editor-page";
-                }
+    // 不通過投稿
+    function returnManuscript() {
 
-            })
-            .catch(error => {
-                alert("審查失敗");
-                console.error(error);
-            });
+        const feedback = document
+            .getElementById("editor_feedback")
+            .value.trim();
 
+        if (feedback === "") {
+            alert("請填寫編輯建議，再執行不通過。");
+            return;
         }
 
+        if (!confirm("確定要將這篇投稿設為不通過嗎？")) {
+            return;
+        }
 
-        // 退回投稿
-        function returnManuscript() {
+        const formData = new FormData();
 
-            if (!confirm("確定退回這篇投稿嗎？")) {
-                return;
+        formData.append("editor_feedback", feedback);
+
+        fetch(`/editor/manuscripts/${manuscriptId}/return`, {
+            method: "PUT",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+
+            if (data.status === "編輯中") {
+                alert("稿件已設為不通過，並退回作者修改！");
+                window.location.href = "/editor-page";
+            } else {
+                alert(data.message || "操作失敗");
             }
 
-            fetch(`/editor/manuscripts/${manuscriptId}/return`, {
-                method: "PUT"
-            })
-            .then(response => response.json())
-            .then(data => {
-
-                alert(data.message);
-
-                if (data.status === "編輯中") {
-                    window.location.href = "/editor-page";
-                }
-
-            })
-            .catch(error => {
-                alert("退回失敗");
-                console.error(error);
-            });
-
-        }
+        })
+        .catch(error => {
+            console.error("不通過投稿失敗：", error);
+            alert("審查時發生錯誤");
+        });
+    }
 
 
-        // 網頁載入時執行
-        loadManuscript();
+    // 頁面載入時執行
+    loadManuscript();
 
-    </script>
+</script>
 
 </body>
 </html>

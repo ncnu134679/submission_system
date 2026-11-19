@@ -3,19 +3,44 @@
 <html lang="zh-Hant-TW">
 <head>
     <meta charset="UTF-8">
-    <title>修改投稿</title>
+    <title>編輯投稿</title>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            margin: 30px;
+            margin: 0;
+            padding: 40px;
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #F4F6F7;
+            color: #293B46;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 35px;
+            background-color: white;
+            border: 1px solid #E1E6E9;
+            border-radius: 8px;
         }
 
         .back-link {
             display: inline-block;
             margin-bottom: 20px;
+            color: #405D68;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
         }
 
         h1 {
+            font-size: 28px;
+            margin-top: 0;
             margin-bottom: 25px;
         }
 
@@ -23,23 +48,106 @@
             display: block;
             margin-top: 20px;
             margin-bottom: 8px;
+            font-weight: bold;
         }
 
         input, textarea {
-            width: 500px;
-            padding: 8px;
-            box-sizing: border-box;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #D5DEE2;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 15px;
+            color: #293B46;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #405D68;
         }
 
         textarea {
-            height: 200px;
+            height: 220px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        /* 編輯建議區塊 */
+        #feedback-section {
+            display: none;
+            margin-bottom: 25px;
+            padding: 18px;
+            background-color: #F4F6F7;
+            border-radius: 5px;
+        }
+
+        #feedback-section label {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+
+        #editor-feedback {
+            margin: 0;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 25px;
         }
 
         button {
-            display: block;
-            margin-top: 20px;
-            margin-bottom: 15px;
-            padding: 6px 15px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .save-button {
+            background-color: #EDF1F3;
+            color: #405D68;
+        }
+
+        .save-button:hover {
+            background-color: #DCE5E9;
+        }
+
+        .submit-button {
+            background-color: #405D68;
+            color: white;
+        }
+
+        .submit-button:hover {
+            background-color: #304A54;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .button-group button {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -50,7 +158,13 @@
 
         <a class="back-link" href="/author-page">← 返回投稿清單</a>
 
-        <h1>修改投稿</h1>
+        <h1>編輯投稿</h1>
+
+        <!-- 編輯建議 -->
+        <div id="feedback-section">
+            <label>編輯建議</label>
+            <p id="editor-feedback"></p>
+        </div>
 
         <form id="manuscript-form">
 
@@ -63,21 +177,40 @@
             <label>文章內容</label>
             <textarea id="content" required></textarea>
 
-            <button type="submit">儲存修改</button>
+            <div class="button-group">
+
+                <button type="submit" class="save-button" id="save-button">
+                    儲存修改
+                </button>
+
+                <button type="button" class="submit-button"
+                    id="submit-button" onclick="submitManuscript()">
+                    確定送出投稿
+                </button>
+
+            </div>
 
         </form>
 
     </div>
 
     <script>
+
         const authorId = 1;
 
         // 從網址取得稿件 ID
         const params = new URLSearchParams(window.location.search);
         const manuscriptId = params.get("id");
 
+
         // 載入原本的投稿資料
         function loadManuscript() {
+
+            if (!manuscriptId) {
+                alert("未指定稿件 ID");
+                window.location.href = "/author-page";
+                return;
+            }
 
             fetch(`/author/${authorId}/manuscripts/${manuscriptId}`)
             .then(response => response.json())
@@ -89,22 +222,33 @@
                     return;
                 }
 
+                // 顯示原本的投稿資料
                 document.getElementById("category").value = data.category;
                 document.getElementById("title").value = data.title;
                 document.getElementById("content").value = data.content;
+
+                // 如果有編輯建議，就顯示出來
+                if (data.editor_feedback &&
+                    data.editor_feedback.trim() !== "") {
+
+                    document.getElementById("editor-feedback").textContent =
+                        data.editor_feedback;
+
+                    document.getElementById("feedback-section").style.display =
+                        "block";
+                }
 
             })
             .catch(error => {
                 alert("載入稿件失敗");
                 console.error(error);
             });
+
         }
 
-        // 儲存修改
-        document.getElementById("manuscript-form")
-            .addEventListener("submit", function(event) {
 
-            event.preventDefault();
+        // 儲存修改
+        function saveManuscript() {
 
             const formData = new FormData();
 
@@ -117,29 +261,127 @@
             formData.append("content",
                 document.getElementById("content").value);
 
-            fetch(`/author/${authorId}/manuscripts/${manuscriptId}`, {
+            return fetch(`/author/${authorId}/manuscripts/${manuscriptId}`, {
                 method: "PUT",
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
+            .then(response => {
+
+                if (!response.ok) {
+                    throw new Error("伺服器回應錯誤");
+                }
+
+                return response.json();
+
+            });
+
+        }
+
+
+        // 儲存修改按鈕
+        document.getElementById("manuscript-form")
+            .addEventListener("submit", async function(event) {
+
+            event.preventDefault();
+
+            const saveButton = document.getElementById("save-button");
+            const submitButton = document.getElementById("submit-button");
+
+            saveButton.disabled = true;
+            submitButton.disabled = true;
+
+            try {
+
+                const data = await saveManuscript();
 
                 if (data.id) {
                     alert("投稿修改成功！");
-                    window.location.href = "/author-page";
+                    // 儲存成功後留在目前編輯頁面
                 } else {
-                    alert(data.message);
+                    alert(data.message || "修改失敗");
                 }
 
-            })
-            .catch(error => {
+            } catch (error) {
+
                 alert("修改失敗，請稍後再試");
                 console.error(error);
-            });
+
+            } finally {
+
+                saveButton.disabled = false;
+                submitButton.disabled = false;
+
+            }
 
         });
 
+
+        // 確定送出投稿
+        async function submitManuscript() {
+
+            if (!document.getElementById("manuscript-form").reportValidity()) {
+                return;
+            }
+
+            if (!confirm("確定要送出這篇投稿嗎？送出後將進入審查中，無法再修改。")) {
+                return;
+            }
+
+            const saveButton = document.getElementById("save-button");
+            const submitButton = document.getElementById("submit-button");
+
+            saveButton.disabled = true;
+            submitButton.disabled = true;
+
+            try {
+
+                // 先儲存目前的文章內容
+                const saveData = await saveManuscript();
+
+                if (!saveData.id) {
+                    alert(saveData.message || "儲存失敗，無法送出投稿");
+                    return;
+                }
+
+                // 儲存成功後，再送出投稿
+                const response = await fetch(
+                    `/author/${authorId}/manuscripts/${manuscriptId}/submit`,
+                    {
+                        method: "PUT"
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error("送出投稿時發生錯誤");
+                }
+
+                const data = await response.json();
+
+                if (data.status === "審查中") {
+                    alert("投稿送出成功！");
+                    window.location.href = "/author-page";
+                } else {
+                    alert(data.message || "送出投稿失敗");
+                }
+
+            } catch (error) {
+
+                alert("送出投稿失敗，請稍後再試");
+                console.error(error);
+
+            } finally {
+
+                saveButton.disabled = false;
+                submitButton.disabled = false;
+
+            }
+
+        }
+
+
+        // 網頁載入時執行
         loadManuscript();
+
     </script>
 
 </body>

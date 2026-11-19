@@ -1,0 +1,138 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>投稿審查系統</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #F4F6F7;
+            color: #293B46;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 800px;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .header p {
+            color: #718087;
+            font-size: 15px;
+        }
+
+        .role-area {
+            display: flex;
+            gap: 25px;
+            justify-content: center;
+        }
+
+        .role-card {
+            flex: 1;
+            background-color: white;
+            border: 1px solid #E1E6E9;
+            border-radius: 8px;
+            padding: 35px 25px;
+            text-decoration: none;
+            color: #293B46;
+            transition: 0.2s;
+        }
+
+        .role-card:hover {
+            border-color: #405D68;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .role-card h2 {
+            font-size: 22px;
+            margin-bottom: 12px;
+        }
+
+        .role-card p {
+            color: #718087;
+            font-size: 14px;
+            line-height: 1.8;
+            min-height: 50px;
+            margin-bottom: 25px;
+        }
+
+        .enter {
+            display: inline-block;
+            background-color: #405D68;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .role-area {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="header">
+            <h1>投稿審查系統</h1>
+            <p>歡迎使用投稿審查平台，請選擇您的使用角色。</p>
+        </div>
+
+        <div class="role-area">
+
+            <a href="/author-page" class="role-card">
+
+                <h2>作者</h2>
+
+                <p>
+                    新增及修改投稿內容，<br>
+                    查看稿件狀態與投稿紀錄。
+                </p>
+
+                <span class="enter">進入作者專區</span>
+
+            </a>
+
+            <a href="/editor-page" class="role-card">
+
+                <h2>編輯</h2>
+
+                <p>
+                    查看待審查稿件，<br>
+                    審閱文章並進行通過或退回。
+                </p>
+
+                <span class="enter">進入編輯專區</span>
+
+            </a>
+
+        </div>
+
+    </div>
+
+</body>
+</html>

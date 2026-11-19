@@ -6,11 +6,43 @@
     <title>編輯投稿管理</title>
 
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            margin: 30px;
+            margin: 0;
+            padding: 40px;
+            font-family: "Microsoft JhengHei", sans-serif;
+            background-color: #F4F6F7;
+            color: #293B46;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 35px;
+            background-color: white;
+            border: 1px solid #E1E6E9;
+            border-radius: 8px;
+        }
+
+        /* 返回首頁 */
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #405D68;
+            text-decoration: none;
+            font-size: 15px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
         }
 
         h1 {
+            font-size: 28px;
+            margin-top: 0;
             margin-bottom: 25px;
         }
 
@@ -20,14 +52,55 @@
             margin-top: 15px;
         }
 
+        th {
+            background-color: #EDF1F3;
+            color: #354B56;
+            font-weight: bold;
+        }
+
         th, td {
-            border: 1px solid #ccc;
-            padding: 12px;
+            border-bottom: 1px solid #E1E6E9;
+            padding: 15px;
             text-align: left;
         }
 
+        td {
+            color: #4F5F67;
+        }
+
+        tbody tr:hover {
+            background-color: #F8FAFB;
+        }
+
+        /* 查看內容按鈕 */
         button {
-            padding: 5px 10px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #405D68;
+            color: white;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #304A54;
+        }
+
+        @media (max-width: 700px) {
+            body {
+                padding: 15px;
+            }
+
+            .container {
+                padding: 20px;
+                overflow-x: auto;
+            }
+
+            table {
+                min-width: 650px;
+            }
         }
     </style>
 </head>
@@ -35,6 +108,9 @@
 <body>
 
     <div class="container">
+
+        <!-- 返回首頁 -->
+        <a href="/" class="back-link">← 返回首頁</a>
 
         <h1>待審查投稿清單</h1>
 
@@ -63,7 +139,15 @@
         function loadManuscripts() {
 
             fetch("/editor/manuscripts")
-                .then(response => response.json())
+                .then(response => {
+
+                    if (!response.ok) {
+                        throw new Error("取得稿件失敗");
+                    }
+
+                    return response.json();
+
+                })
                 .then(data => {
 
                     const list = document.getElementById("manuscript-list");
@@ -71,11 +155,13 @@
                     list.innerHTML = "";
 
                     if (data.length === 0) {
+
                         list.innerHTML = `
                             <tr>
                                 <td colspan="4">目前沒有待審查稿件</td>
                             </tr>
                         `;
+
                         return;
                     }
 
@@ -83,16 +169,29 @@
 
                         const row = document.createElement("tr");
 
-                        row.innerHTML = `
-                            <td>${manuscript.author}</td>
-                            <td>${manuscript.category}</td>
-                            <td>${manuscript.title}</td>
-                            <td>
-                                <button onclick="viewManuscript(${manuscript.id})">
-                                    查看內容
-                                </button>
-                            </td>
-                        `;
+                        const authorCell = document.createElement("td");
+                        authorCell.textContent = manuscript.author;
+
+                        const categoryCell = document.createElement("td");
+                        categoryCell.textContent = manuscript.category;
+
+                        const titleCell = document.createElement("td");
+                        titleCell.textContent = manuscript.title;
+
+                        const actionCell = document.createElement("td");
+
+                        const button = document.createElement("button");
+                        button.textContent = "查看內容";
+                        button.addEventListener("click", function() {
+                            viewManuscript(manuscript.id);
+                        });
+
+                        actionCell.appendChild(button);
+
+                        row.appendChild(authorCell);
+                        row.appendChild(categoryCell);
+                        row.appendChild(titleCell);
+                        row.appendChild(actionCell);
 
                         list.appendChild(row);
 
@@ -100,10 +199,19 @@
 
                 })
                 .catch(error => {
+
                     console.error("取得稿件失敗：", error);
+
+                    document.getElementById("manuscript-list").innerHTML = `
+                        <tr>
+                            <td colspan="4">資料載入失敗，請稍後再試。</td>
+                        </tr>
+                    `;
+
                 });
 
         }
+
 
         // 查看稿件內容
         function viewManuscript(id) {
@@ -111,6 +219,7 @@
             window.location.href = `/editor-manuscript-page?id=${id}`;
 
         }
+
 
         // 網頁載入時執行
         loadManuscripts();
