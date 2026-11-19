@@ -4,94 +4,118 @@
 <head>
     <meta charset="UTF-8">
     <title>編輯投稿管理</title>
+
+    <style>
+        body {
+            margin: 30px;
+        }
+
+        h1 {
+            margin-bottom: 25px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 12px;
+            text-align: left;
+        }
+
+        button {
+            padding: 5px 10px;
+        }
+    </style>
 </head>
 
 <body>
 
-<div class="container">
+    <div class="container">
 
-    <h1>待審查投稿清單</h1>
+        <h1>待審查投稿清單</h1>
 
-    <table>
-        <thead>
-            <tr>
-                <th>作者</th>
-                <th>投稿類別</th>
-                <th>文章標題</th>
-                <th>操作</th>
-            </tr>
-        </thead>
+        <table>
+            <thead>
+                <tr>
+                    <th>作者</th>
+                    <th>投稿類別</th>
+                    <th>文章標題</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
 
-        <tbody id="manuscript-list">
-            <tr>
-                <td colspan="4">資料載入中...</td>
-            </tr>
-        </tbody>
-    </table>
+            <tbody id="manuscript-list">
+                <tr>
+                    <td colspan="4">資料載入中...</td>
+                </tr>
+            </tbody>
+        </table>
 
-</div>
+    </div>
 
-<script>
+    <script>
 
-    // 取得待審查稿件
-    function loadManuscripts() {
+        // 取得待審查稿件
+        function loadManuscripts() {
 
-        fetch("/editor/manuscripts")
-            .then(response => response.json())
-            .then(data => {
+            fetch("/editor/manuscripts")
+                .then(response => response.json())
+                .then(data => {
 
-                const list = document.getElementById("manuscript-list");
+                    const list = document.getElementById("manuscript-list");
 
-                list.innerHTML = "";
+                    list.innerHTML = "";
 
-                if (data.length === 0) {
-                    list.innerHTML = `
-                        <tr>
-                            <td colspan="4">目前沒有待審查稿件</td>
-                        </tr>
-                    `;
-                    return;
-                }
+                    if (data.length === 0) {
+                        list.innerHTML = `
+                            <tr>
+                                <td colspan="4">目前沒有待審查稿件</td>
+                            </tr>
+                        `;
+                        return;
+                    }
 
-                data.forEach(manuscript => {
+                    data.forEach(manuscript => {
 
-                    const row = document.createElement("tr");
+                        const row = document.createElement("tr");
 
-                    row.innerHTML = `
-                        <td>${manuscript.author}</td>
-                        <td>${manuscript.category}</td>
-                        <td>${manuscript.title}</td>
-                        <td>
-                            <button onclick="viewManuscript(${manuscript.id})">
-                                查看內容
-                            </button>
-                        </td>
-                    `;
+                        row.innerHTML = `
+                            <td>${manuscript.author}</td>
+                            <td>${manuscript.category}</td>
+                            <td>${manuscript.title}</td>
+                            <td>
+                                <button onclick="viewManuscript(${manuscript.id})">
+                                    查看內容
+                                </button>
+                            </td>
+                        `;
 
-                    list.appendChild(row);
+                        list.appendChild(row);
 
+                    });
+
+                })
+                .catch(error => {
+                    console.error("取得稿件失敗：", error);
                 });
 
-            })
-            .catch(error => {
-                console.error("取得稿件失敗：", error);
-            });
+        }
 
-    }
+        // 查看稿件內容
+        function viewManuscript(id) {
 
+            window.location.href = `/editor-manuscript-page?id=${id}`;
 
-    // 查看稿件內容
-    function viewManuscript(id) {
+        }
 
-        window.location.href = `/editor-manuscript-page?id=${id}`;
+        // 網頁載入時執行
+        loadManuscripts();
 
-    }
-
-
-    // 網頁載入時執行
-    loadManuscripts();
-
-</script>
+    </script>
 
 </body>
 </html>
